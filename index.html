@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <head>
+    <!-- 基本設定 -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>コピー防止文字挿入ジェネレーター | CopyProtect-Generator</title>
+    <meta name="description" content="文章に見えない制御文字（RLO/LRO）を挿入し、コピー＆ペースト時に文字列が入れ替わる仕組みを提供する無料ツールです">
+    <meta name="keywords" content="コピー防止, テキストジェネレーター, 制御文字, RLO, LRO, コピー対策, JavaScript, 無料ツール">
+    <meta name="author" content="CopyProtect-Generator | kuwa.dev">
+    <meta name="theme-color" content="#6B46C1">
+  
+    <!-- 検索エンジン向け -->
+    <link rel="canonical" href="https://cpg.kuwa.dev/">
+    <meta name="robots" content="index,follow">
+  
+    <!-- Open Graph -->
+    <meta property="og:site_name" content="CopyProtect-Generator">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://cpg.kuwa.dev/">
+    <meta property="og:title" content="コピー防止文字挿入ジェネレーター｜CopyProtect-Generator">
+    <meta property="og:description" content="文章に見えない制御文字（RLO/LRO）を挿入し、コピー＆ペースト時に文字列が入れ替わる仕組みを提供する無料ツールです">
+    <meta property="og:image" content="https://cpg.kuwa.dev/ogp.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+  
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@kuwamain">
+    <meta name="twitter:url" content="https://cpg.kuwa.dev/">
+    <meta name="twitter:title" content="コピー防止文字挿入ジェネレーター｜CopyProtect-Generator">
+    <meta name="twitter:description" content="コピペ時に文字が入れ替わる制御文字（RLO/LRO）を簡単生成  見た目そのままのコピー防止ツール">
+    <meta name="twitter:image" content="https://cpg.kuwa.dev/ogp.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="./favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="./icon.png">
+  </head>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            dark: { 900: '#0f0f15', 800: '#1a1b26', 700: '#242735', 600: '#2d3045' }
+          },
+          animation: { 'fade-in': 'fadeIn 0.3s ease-in-out', 'float': 'float 3s ease-in-out infinite' },
+          keyframes: {
+            fadeIn: { '0%': { opacity: '0', transform: 'translateY(10px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+            float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } }
+          },
+          boxShadow: {
+            'glow': '0 0 15px rgba(139, 92, 246, 0.5)',
+            'glow-hover': '0 0 20px rgba(139, 92, 246, 0.7)'
+          }
+        }
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer base {
+      body { @apply bg-dark-900 text-gray-300 min-h-screen font-sans; }
+      .glass { @apply bg-dark-800/60 backdrop-blur-lg border border-white/10; }
+      .card { @apply glass rounded-2xl p-6 shadow-2xl; }
+      .btn { @apply px-5 py-3 rounded-xl font-bold bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-500 hover:to-indigo-600 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20 active:scale-[0.98] flex items-center gap-2; }
+      textarea, input { @apply bg-dark-700/50 border border-white/10 rounded-xl p-4 w-full focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all; }
+      .tooltip { @apply invisible absolute; }
+      .has-tooltip:hover .tooltip { @apply visible z-50; }
+    }
+  </style>
+</head>
+<body class="dark">
+  <div class="min-h-screen flex flex-col items-center py-12 px-4">
+    <!-- ヘッダー -->
+    <div class="w-full max-w-4xl mb-12 text-center">
+      <h1 class="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-indigo-300 mb-4 animate-fade-in">
+        <i class="fas fa-shield-alt mr-3"></i>コピー防止文字挿入ジェネレーター
+      </h1>
+      <p class="text-gray-400 max-w-2xl mx-auto animate-fade-in">
+        文章にコピー防止用の制御文字を挿入します<br>
+        見た目は元の文章と変わらないまま、コピー＆ペーストすると文字が入れ替わって表示される仕組みです
+      </p>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-6xl animate-fade-in">
+      <!-- 入力セクション -->
+      <div class="card space-y-6">
+        <div class="space-y-2">
+          <h2 class="text-xl font-bold text-gray-200 flex items-center gap-2"><i class="fas fa-keyboard text-purple-400"></i> 入力テキスト</h2>
+          <p class="text-sm text-gray-500">改行を含むテキストを入力してください（最大100000文字）</p>
+          <textarea id="inputText" rows="8" placeholder="例: いろはにほへとちりぬるを&#10;わかよたれそつねならむ&#10;うゐのおくやまけふこえて&#10;あさきゆめみしゑひもせす" class="h-48" maxlength="100000"></textarea>
+          <div class="flex justify-between text-sm text-gray-500">
+            <span id="charCount">0/100000 文字</span>
+            <span class="text-purple-400"><i class="fas fa-exclamation-circle mr-1"></i>見た目は維持されます</span>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-4">
+          <button id="generateBtn" class="btn"><i class="fas fa-wand-magic-sparkles"></i> 変換を実行</button>
+          <button id="exampleBtn" class="px-5 py-3 rounded-xl font-medium bg-dark-700 hover:bg-dark-600 transition-all"><i class="fas fa-lightbulb"></i> サンプルを入力</button>
+          <button id="clearBtn" class="px-5 py-3 rounded-xl font-medium bg-dark-700 hover:bg-dark-600 transition-all"><i class="fas fa-eraser"></i> クリア</button>
+        </div>
+      </div>
+      <!-- 出力セクション -->
+      <div id="outputSection" class="card space-y-6">
+          <div class="space-y-2">
+              <div class="flex justify-between items-center">
+                  <h2 class="text-xl font-bold text-gray-200 flex items-center gap-2"><i class="fas fa-code text-indigo-400"></i> 変換結果</h2>
+                  <div class="flex gap-2">
+                      <button id="copyBtn" class="px-4 py-2 rounded-lg bg-dark-700 hover:bg-dark-600 text-sm transition-all has-tooltip relative"><i class="fas fa-copy mr-1"></i> コピー<span class="tooltip bg-gray-800 text-white text-xs p-2 rounded-lg w-40 -left-10 -top-10 shadow-lg">結果をクリップボードにコピーします</span></button>
+                      <button id="testBtn" class="px-4 py-2 rounded-lg bg-dark-700 hover:bg-dark-600 text-sm transition-all has-tooltip relative"><i class="fas fa-paste mr-1"></i> テスト<span class="tooltip bg-gray-800 text-white text-xs p-2 rounded-lg w-40 -left-10 -top-10 shadow-lg">ペーストして効果を確認</span></button>
+                  </div>
+              </div>
+              <p class="text-sm text-gray-500">変換後のテキスト（見た目は同じですが制御文字が挿入されています）</p>
+              <div class="relative">
+                  <textarea id="outputText" rows="8" readonly class="h-48 bg-dark-700/30 font-mono text-sm"></textarea>
+                  <div id="copySuccess" class="absolute top-4 right-4 bg-green-500/90 text-white px-3 py-1 rounded-lg text-sm hidden"><i class="fas fa-check mr-1"></i>コピーしました!</div>
+              </div>
+          </div>
+          <div class="p-4 bg-dark-700/50 rounded-xl">
+              <h3 class="font-bold text-gray-300 mb-2 flex items-center gap-2"><i class="fas fa-info-circle text-blue-400"></i> 使い方</h3>
+              <ul class="text-sm text-gray-400 space-y-1 list-disc pl-5"><li>左のボックスにテキストを入力し「変換を実行」をクリック</li><li>右のボックスに制御文字が挿入されたテキストが生成されます</li><li>「コピー」ボタンで結果をクリップボードにコピー</li><li>「テスト」ボタンでペーストして効果を確認</li></ul>
+          </div>
+        </div>
+    </div>
+
+    <!-- テストエリア -->
+    <div class="card w-full max-w-4xl mt-8">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="font-bold text-lg text-gray-200 flex items-center gap-2">
+          <i class="fas fa-vial text-yellow-400"></i> ペーストテストエリア
+        </h3>
+        <button id="clearTestBtn" class="px-4 py-2 rounded-lg bg-dark-700 hover:bg-dark-600 text-sm transition-all">
+          <i class="fas fa-trash mr-1"></i> クリア
+        </button>
+      </div>
+      <div class="bg-dark-700/30 p-4 rounded-xl">
+        <p class="text-sm text-gray-400 mb-3">
+          下のテキストエリアに変換結果をペーストすると、制御文字の効果を確認できます<br>
+          元の文章とは異なる文字列が表示されるはずです
+        </p>
+        <textarea 
+          id="testArea" 
+          rows="3" 
+          placeholder="ここに変換結果をペーストして効果を確認..."
+          class="w-full bg-dark-600/50 border border-purple-500/30 rounded-xl p-4"
+        ></textarea>
+        <div class="mt-3 flex items-center text-sm text-gray-500">
+          <i class="fas fa-lightbulb mr-2 text-purple-400"></i>
+          <span>変換結果をコピー＆ペーストすると、文字が入れ替わって表示されます</span>
+        </div>
+      </div>
+    </div>
+      
+    <!-- 技術情報 -->
+    <div class="card w-full max-w-4xl mt-8">
+      <h3 class="font-bold text-lg text-gray-200 mb-4 flex items-center gap-2">
+        <i class="fas fa-cogs text-yellow-400"></i> 技術情報
+      </h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-dark-700/30 p-4 rounded-xl">
+          <h4 class="font-bold text-gray-300 mb-2">制御文字の仕組み</h4>
+          <p class="text-sm text-gray-400">
+            このツールは以下の制御文字を使用して文字列を変換します：
+            <ul class="mt-2 space-y-1 list-disc pl-5">
+              <li>U+202E: 右から左への上書き (RLO)</li>
+              <li>U+202D: 左から右への上書き (LRO)</li>
+            </ul>
+            これらの文字は見えないため、表示上は元の文章と変わりませんが、
+            コピーしたテキストをペーストすると文字順序が変わります
+          </p>
+        </div>
+      </div>
+    </div>
+      
+    <!-- フッター -->
+    <footer class="mt-12 text-center text-gray-500 text-sm">
+      <p class="mt-2">生成されたテキストの使用は自己責任でお願いします</p>
+      <p>Copyright © 2025 MemoryArchive | kuwa.dev All Rights Reserved.</p>
+    </footer>
+  </div>
+
+  <script>
+    const RLO = '\u202E';  const LRO = '\u202D';
+    const inputText = document.getElementById('inputText');
+    const outputText = document.getElementById('outputText');
+    const generateBtn = document.getElementById('generateBtn');
+    const outputSection = document.getElementById('outputSection');
+    const copyBtn = document.getElementById('copyBtn');
+    const testBtn = document.getElementById('testBtn');
+    const exampleBtn = document.getElementById('exampleBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const clearTestBtn = document.getElementById('clearTestBtn');
+    const testArea = document.getElementById('testArea');
+    const charCount = document.getElementById('charCount');
+    const copySuccess = document.getElementById('copySuccess');
+
+    inputText.addEventListener('input', () => { charCount.textContent = `${inputText.value.length}/100000 文字`; });
+    exampleBtn.addEventListener('click', () => { inputText.value = "いろはにほへとちりぬるを\nわかよたれそつねならむ\nうゐのおくやまけふこえて\nあさきゆめみしゑひもせす"; charCount.textContent = `${inputText.value.length}/100000 文字`; });
+    clearBtn.addEventListener('click', () => { inputText.value = ''; outputText.value = ''; charCount.textContent = '0/100000 文字'; });
+    clearTestBtn?.addEventListener('click', () => { testArea.value = ''; });
+
+    function scrambleText(text) {
+      return text.split('\n').map(line => {
+        if (!line) return '';
+        const chars = [...line];
+        const mixed = [];
+        for (let i=0; i<chars.length; i++) { mixed.push(chars[i], chars[chars.length-1-i]); }
+        const truncated = mixed.slice(0, chars.length);
+        const chars2 = [RLO, ...truncated];
+        const resultArray = [];
+        for (let i=0; i<chars2.length; i++) {
+          resultArray.push(chars2[i]);
+          if (i < chars2.length-1) { resultArray.push(i%2===0 ? LRO : RLO); }
+        }
+        return resultArray.join('');
+      }).join('\n');
+    }
+
+    generateBtn.addEventListener('click', () => {
+      if (inputText.value.trim() === '') {
+        outputText.value = "テキストを入力してください";
+        return;
+      }
+      try {
+        const scrambled = scrambleText(inputText.value);
+        outputText.value = scrambled;
+        // Glow animation
+        outputText.classList.add('shadow-glow');
+        setTimeout(() => { outputText.classList.remove('shadow-glow'); }, 1000);
+        // Scroll into view
+        outputSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } catch (error) {
+        outputText.value = "エラーが発生しました: " + error.message;
+      }
+    });
+
+    copyBtn.addEventListener('click', () => {
+      if (!outputText.value.trim()) return;
+      navigator.clipboard.writeText(outputText.value).then(() => {
+        copySuccess.classList.remove('hidden');
+        copySuccess.classList.add('animate-fade-in');
+        setTimeout(() => {
+          copySuccess.classList.add('opacity-0');
+          setTimeout(() => { copySuccess.classList.add('hidden'); copySuccess.classList.remove('opacity-0','animate-fade-in'); }, 300);
+        }, 1500);
+      });
+    });
+
+    testBtn.addEventListener('click', () => {
+      if (!outputText.value.trim()) return;
+      testArea.focus(); testArea.value = '';
+      setTimeout(() => {
+        testArea.placeholder = "ここにペーストしてください (Ctrl+V)";
+        testArea.classList.add('shadow-glow-hover');
+        const event = new KeyboardEvent('keydown', { key: 'v', ctrlKey: true, bubbles: true });
+        testArea.dispatchEvent(event);
+      }, 100);
+    });
+
+    // ページロード時にサンプルを入力して自動生成
+    // window.addEventListener('DOMContentLoaded', () => { exampleBtn.click(); setTimeout(() => { generateBtn.click(); }, 300); });
+  </script>
+</body>
+</html>
